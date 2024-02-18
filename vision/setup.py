@@ -21,6 +21,9 @@ setup(
     entry_points={
         'console_scripts': [
                 'talker = vision.vision:main',
+                'area = vision.area:main',
+                'circle = vision.circle:main',
+                'camera = vision.camera:main',
         ],
 },
 )
