@@ -19,6 +19,7 @@ class DisplaySubscriberNode2(Node):
 
         self.publisher_ = self.create_publisher(String, 'circle/msgs', 10)
         self.middle_publisher_ = self.create_publisher(Int32, 'circle/middle', 10)
+        self.count_publisher_ = self.create_publisher(Int32, 'circle/count', 10)
 
     def image_callback(self, msg):
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
@@ -62,9 +63,14 @@ class DisplaySubscriberNode2(Node):
         if key & 0xFF == ord('a'):
             # Publish middle points as integer values
             self.publish_middle_points(middle_points)
-
-        # Publish a message to the custom topic
-        self.publish_custom_message()
+            # Publish the number of circles
+            self.publish_circle_count(len(middle_points))
+            # Publish a message to the custom topic
+            self.publish_custom_message()
+            # Print the number of circles and their middle points
+            print(f"{len(middle_points)} circle(s) found when 'a' was clicked:")
+            for idx, point in enumerate(middle_points):
+                print(f"Circle {idx+1}: Middle Point = {point}")
 
     def publish_custom_message(self):
         custom_msg = String()
@@ -77,6 +83,11 @@ class DisplaySubscriberNode2(Node):
             # Assuming you want to publish the x-coordinate of the middle point
             middle_msg.data = point[0]  
             self.middle_publisher_.publish(middle_msg)
+
+    def publish_circle_count(self, count):
+        count_msg = Int32()
+        count_msg.data = count
+        self.count_publisher_.publish(count_msg)
 
 def main(args=None):
     rclpy.init(args=args)
