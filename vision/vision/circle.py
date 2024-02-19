@@ -1,10 +1,10 @@
-# display_subscriber_node_2.py
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from std_msgs.msg import String  # Import String message type
+from std_msgs.msg import String, Int32
 from cv_bridge import CvBridge
 import cv2
+import numpy as np
 
 class DisplaySubscriberNode2(Node):
     def __init__(self):
@@ -17,13 +17,51 @@ class DisplaySubscriberNode2(Node):
         self.image_subscription
         self.bridge = CvBridge()
 
-        # Create a publisher for a new topic
         self.publisher_ = self.create_publisher(String, 'circle/msgs', 10)
+        self.middle_publisher_ = self.create_publisher(Int32, 'circle/middle', 10)
 
     def image_callback(self, msg):
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        cv2.imshow("Camera Feed Subscriber 2", cv_image)
-        cv2.waitKey(1)
+
+        # Define the color range
+        lowerBound = np.array([75, 50, 100], dtype=np.uint8)
+        upperBound = np.array([200, 150, 250], dtype=np.uint8)
+
+        # Create a mask using the color range
+        mask = cv2.inRange(cv_image, lowerBound, upperBound)
+
+        # Find contours in the mask
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        middle_points = []  # List to store middle points of bounding boxes
+
+        # Iterate through each contour
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            area = cv2.contourArea(contour)
+
+            # If the area of the contour is greater than a threshold, draw a bounding box
+            if area > 1000:
+                color = (255, 0, 0)  # Red color for the bounding box
+                thickness = 2
+                cv2.rectangle(cv_image, (x, y), (x + w, y + h), color, thickness)
+
+                # Calculate middle point of bounding box
+                middle_x = x + w // 2
+                middle_y = y + h // 2
+                middle_point = (middle_x, middle_y)
+                middle_points.append(middle_point)
+
+        # Display the processed images
+        cv2.imshow("circle", cv_image)
+
+        # Wait for key press
+        key = cv2.waitKey(1)
+
+        # Check if the pressed key is "a"
+        if key & 0xFF == ord('a'):
+            # Publish middle points as integer values
+            self.publish_middle_points(middle_points)
 
         # Publish a message to the custom topic
         self.publish_custom_message()
@@ -32,6 +70,13 @@ class DisplaySubscriberNode2(Node):
         custom_msg = String()
         custom_msg.data = "Hello from Subscriber Node 2"
         self.publisher_.publish(custom_msg)
+
+    def publish_middle_points(self, middle_points):
+        for point in middle_points:
+            middle_msg = Int32()
+            # Assuming you want to publish the x-coordinate of the middle point
+            middle_msg.data = point[0]  
+            self.middle_publisher_.publish(middle_msg)
 
 def main(args=None):
     rclpy.init(args=args)

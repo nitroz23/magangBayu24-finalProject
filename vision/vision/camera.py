@@ -22,7 +22,7 @@ class CameraPublisher(Node):
             self.get_logger().error("Failed to capture frame from camera")
             return
             
-        crop = frame[250:480, 150:450]
+        crop = frame[250:480, 100:500]
 
         ros_image = self.bridge.cv2_to_imgmsg(crop, "bgr8")
         self.publisher_.publish(ros_image)
