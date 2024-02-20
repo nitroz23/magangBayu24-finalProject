@@ -18,15 +18,16 @@ class DisplaySubscriberNode2(Node):
         self.bridge = CvBridge()
 
         self.publisher_ = self.create_publisher(String, 'circle/msgs', 10)
-        self.middle_publisher_ = self.create_publisher(Int32, 'circle/middle', 10)
+        self.middle_x_publisher_ = self.create_publisher(Int32, 'circle/middle_x', 10)
+        self.middle_y_publisher_ = self.create_publisher(Int32, 'circle/middle_y', 10)
         self.count_publisher_ = self.create_publisher(Int32, 'circle/count', 10)
 
     def image_callback(self, msg):
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         # Define the color range
-        lowerBound = np.array([75, 50, 100], dtype=np.uint8)
-        upperBound = np.array([200, 150, 250], dtype=np.uint8)
+        lowerBound = np.array([100, 100, 200], dtype=np.uint8)
+        upperBound = np.array([200, 200, 250], dtype=np.uint8)
 
         # Create a mask using the color range
         mask = cv2.inRange(cv_image, lowerBound, upperBound)
@@ -34,7 +35,8 @@ class DisplaySubscriberNode2(Node):
         # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        middle_points = []  # List to store middle points of bounding boxes
+        middle_x_points = []  # List to store x-coordinates of middle points
+        middle_y_points = []  # List to store y-coordinates of middle points
 
         # Iterate through each contour
         for contour in contours:
@@ -42,7 +44,7 @@ class DisplaySubscriberNode2(Node):
             area = cv2.contourArea(contour)
 
             # If the area of the contour is greater than a threshold, draw a bounding box
-            if area > 1000:
+            if area > 750:
                 color = (255, 0, 0)  # Red color for the bounding box
                 thickness = 2
                 cv2.rectangle(cv_image, (x, y), (x + w, y + h), color, thickness)
@@ -50,8 +52,8 @@ class DisplaySubscriberNode2(Node):
                 # Calculate middle point of bounding box
                 middle_x = x + w // 2
                 middle_y = y + h // 2
-                middle_point = (middle_x, middle_y)
-                middle_points.append(middle_point)
+                middle_x_points.append(middle_x)
+                middle_y_points.append(middle_y)
 
         # Display the processed images
         cv2.imshow("circle", cv_image)
@@ -62,27 +64,30 @@ class DisplaySubscriberNode2(Node):
         # Check if the pressed key is "a"
         if key & 0xFF == ord('a'):
             # Publish middle points as integer values
-            self.publish_middle_points(middle_points)
+            self.publish_middle_points(middle_x_points, middle_y_points)
             # Publish the number of circles
-            self.publish_circle_count(len(middle_points))
+            self.publish_circle_count(len(middle_x_points))
             # Publish a message to the custom topic
             self.publish_custom_message()
             # Print the number of circles and their middle points
-            print(f"{len(middle_points)} circle(s) found when 'a' was clicked:")
-            for idx, point in enumerate(middle_points):
-                print(f"Circle {idx+1}: Middle Point = {point}")
+            print(f"{len(middle_x_points)} circle(s) found when 'a' was clicked:")
+            for idx, (x, y) in enumerate(zip(middle_x_points, middle_y_points)):
+                print(f"Circle {idx+1}: Middle Point = ({x}, {y})")
 
     def publish_custom_message(self):
         custom_msg = String()
         custom_msg.data = "Hello from Subscriber Node 2"
         self.publisher_.publish(custom_msg)
 
-    def publish_middle_points(self, middle_points):
-        for point in middle_points:
-            middle_msg = Int32()
-            # Assuming you want to publish the x-coordinate of the middle point
-            middle_msg.data = point[0]  
-            self.middle_publisher_.publish(middle_msg)
+    def publish_middle_points(self, middle_x_points, middle_y_points):
+        for x, y in zip(middle_x_points, middle_y_points):
+            middle_x_msg = Int32()
+            middle_x_msg.data = x
+            self.middle_x_publisher_.publish(middle_x_msg)
+
+            middle_y_msg = Int32()
+            middle_y_msg.data = y
+            self.middle_y_publisher_.publish(middle_y_msg)
 
     def publish_circle_count(self, count):
         count_msg = Int32()
