@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Int32MultiArray
 import numpy as np
 
 class CountAggregator(Node):
@@ -46,6 +46,8 @@ class CountAggregator(Node):
             'area/min_y',
             self.min_y_callback,
             10)
+
+        self.available_area_publisher = self.create_publisher(Int32MultiArray, 'available_area', 10)
 
     def middle_x_callback(self, msg):
         self.circle_x = np.append(self.circle_x, msg.data)
@@ -111,6 +113,12 @@ class CountAggregator(Node):
                 print("Available Areas:", self.available_area)
         except IndexError:
             print("No circles or areas detected")
+        self.publish_available_area()
+    
+    def publish_available_area(self):
+        msg = Int32MultiArray()
+        msg.data = self.available_area
+        self.available_area_publisher.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)

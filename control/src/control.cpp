@@ -1,29 +1,34 @@
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/image.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
 
-class ImageSubscriber : public rclcpp::Node
+class AvailableAreaSubscriber : public rclcpp::Node
 {
 public:
-    ImageSubscriber() : Node("image_subscriber")
+    AvailableAreaSubscriber() : Node("available_area_subscriber")
     {
-        subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-            "/camera/image_raw", 10,
-            std::bind(&ImageSubscriber::image_callback, this, std::placeholders::_1));
+        // Subscribe to the available_area topic
+        subscription_ = this->create_subscription<std_msgs::msg::Int32MultiArray>(
+            "available_area", 10, std::bind(&AvailableAreaSubscriber::availableAreaCallback, this, std::placeholders::_1));
     }
 
 private:
-    void image_callback(const sensor_msgs::msg::Image::SharedPtr msg)
+    void availableAreaCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg)
     {
-        RCLCPP_INFO(this->get_logger(), "Received image");
+        // Print out the received data
+        RCLCPP_INFO(this->get_logger(), "Received available areas:");
+        for (auto area : msg->data)
+        {
+            RCLCPP_INFO(this->get_logger(), "%d", area);
+        }
     }
 
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+    rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr subscription_;
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<ImageSubscriber>();
+    auto node = std::make_shared<AvailableAreaSubscriber>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
