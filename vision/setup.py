@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-                'talker = vision.vision:main',
+                'combine = vision.vision:main',
                 'area = vision.area:main',
                 'circle = vision.circle:main',
                 'camera = vision.camera:main',

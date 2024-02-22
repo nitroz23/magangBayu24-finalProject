@@ -30,8 +30,8 @@ include_directories(
   ${cv_bridge_INCLUDE_DIRS}
 )
 
-add_executable(listener src/control.cpp)
-ament_target_dependencies(listener 
+add_executable(move src/control.cpp)
+ament_target_dependencies(move 
   rclcpp 
   std_msgs
   sensor_msgs
@@ -40,7 +40,7 @@ ament_target_dependencies(listener
 )
 
 install(TARGETS
-  listener
+  move
   DESTINATION lib/${PROJECT_NAME}
 )
 
