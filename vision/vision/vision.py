@@ -95,6 +95,7 @@ class CountAggregator(Node):
             print("No areas detected")
     
     def assign_circle_to_area(self):
+        previous_available_area = self.available_area.copy()  # Make a copy of the previous available areas
         try:
             for i in range(len(self.circle_x)):
                 circle_x = self.circle_x[i]
@@ -113,7 +114,11 @@ class CountAggregator(Node):
                 print("Available Areas:", self.available_area)
         except IndexError:
             print("No circles or areas detected")
-        self.publish_available_area()
+
+        # Check if there are changes in available areas
+        if previous_available_area != self.available_area:
+            self.publish_available_area()  # Publish only if there are changes
+
     
     def publish_available_area(self):
         msg = Int32MultiArray()

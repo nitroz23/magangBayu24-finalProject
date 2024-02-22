@@ -29,7 +29,7 @@ class DisplaySubscriberNode1(Node):
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
 
         # Define the color range
-        lowerBound = np.array([150, 150, 150], dtype=np.uint8)
+        lowerBound = np.array([150, 150, 100], dtype=np.uint8)
         upperBound = np.array([255, 255, 255], dtype=np.uint8)
 
         # Create a mask using the color range
