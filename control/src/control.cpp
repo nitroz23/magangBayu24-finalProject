@@ -12,6 +12,9 @@ public:
         // Subscribe to the available_area topic
         subscription_ = this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "available_area", 10, std::bind(&AvailableAreaSubscriber::availableAreaCallback, this, std::placeholders::_1));
+
+        // Advertise the selected_integers topic
+        publisher_ = this->create_publisher<std_msgs::msg::Int32MultiArray>("selected_integers", 10);
     }
 
 private:
@@ -48,6 +51,11 @@ private:
 
             selected_integers.push_back(selected_integer); // Store the selected integer in the new list
             RCLCPP_INFO(this->get_logger(), "Selected integer: %d", selected_integer);
+
+            // Publish the selected_integers list
+            auto msg = std_msgs::msg::Int32MultiArray();
+            msg.data = selected_integers;
+            publisher_->publish(msg);
         }
 
         // Print the selected_integer list
@@ -61,6 +69,7 @@ private:
     rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr subscription_;
     std::vector<std::vector<int>> received_messages; // List to store received messages
     std::vector<int> selected_integers; // List to store selected integers
+    rclcpp::Publisher<std_msgs::msg::Int32MultiArray>::SharedPtr publisher_; // Publisher for selected integers
 };
 
 int main(int argc, char **argv)
